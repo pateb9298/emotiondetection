@@ -1,0 +1,6 @@
+streamlit
+deepface
+opencv-python-headless
+numpy
+tensorflow
+Pillow
