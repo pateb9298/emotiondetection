@@ -61,7 +61,7 @@ if "gallery" not in st.session_state:
 st.markdown(
     """
     <div style='text-align: center;'>
-        <h1 style='font-size:2.5rem; margin-bottom:0.25rem;'>📸 Emotion Detection</h1>
+        <h1 style='font-size:2.5rem; margin-bottom:0.25rem;'>📸 Moodify</h1>
         <p style='font-size:1.1rem; color: gray;'>Capture or upload a photo to analyze emotions</p>
     </div>
     """,
