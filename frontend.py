@@ -1,5 +1,3 @@
-# frontend.py
-
 import streamlit as st
 from PIL import Image
 import io
@@ -11,11 +9,17 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
 import random
 
-# --- VERY TOP: inject CSS for round buttons ---
+# 1) THIS MUST BE FIRST STREAMLIT CALL
+st.set_page_config(
+    page_title="Moodify",
+    page_icon="📸",
+    layout="centered"
+)
+
+# 2) Now inject your CSS
 st.markdown(
     """
     <style>
-    /* Make every st.button circular */
     div.stButton > button {
         border: 2px solid #666;
         border-radius: 50%;
