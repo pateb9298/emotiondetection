@@ -160,7 +160,7 @@ if image_data:
         playlist_embed_url = f"https://open.spotify.com/embed/playlist/{playlist['id']}"
 
         st.markdown(f"**[{playlist_name}]({playlist_url})**")
-        st.components.v1.iframe(playlist_embed_url, height=400)
+        st.components.v1.iframe(src = playlist_embed_url, height=400)
     else:
         st.warning("No matching playlist found on Spotify.")
 
