@@ -9,6 +9,7 @@ import os
 from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
 import random
+import time
 
 # Initialize Spotify API client
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
@@ -137,15 +138,28 @@ if image_data:
     })
 
     st.markdown("---")
-    st.subheader("🎵 Your Mood-Based Playlist")
+
+    # 🎵 Your Mood-Based Playlist with inline reload button
+    col1, col2 = st.columns([10, 1])
+    with col1:
+        st.subheader("🎵 Your Mood-Based Playlist")
+    with col2:
+        regenerate = st.button("🔄", key="regen", help="Regenerate Playlist")
 
     detected_emotion = emotions[0]["emotion"]
 
-    if "playlist" not in st.session_state:
-        st.session_state.playlist = get_playlist(detected_emotion)
+    def retry_get_playlist(emotion, timeout=5):
+        start = time.time()
+        while time.time() - start < timeout:
+            playlist = get_playlist(emotion)
+            if playlist:
+                return playlist
+            time.sleep(0.5)
+        return None
 
-    if st.button("🔁 Regenerate Playlist"):
-        st.session_state.playlist = get_playlist(detected_emotion)
+    if regenerate or "playlist" not in st.session_state:
+        with st.spinner("Finding playlist..."):
+            st.session_state.playlist = retry_get_playlist(detected_emotion)
 
     playlist = st.session_state.playlist
 
@@ -156,7 +170,8 @@ if image_data:
         st.markdown(f"**[{playlist_name}]({playlist_url})**")
         st.components.v1.iframe(src=playlist_embed_url, height=400)
     else:
-        st.warning("No matching playlist found.")
+        st.warning("No matching playlist found after multiple tries.")
+
 
 # ---- Gallery Section ----
 st.markdown("---")
