@@ -28,25 +28,40 @@ emotion_to_genre = {
 }
 
 # ---- Helper Function ----
+# ---- Helper Function ----
 def analyze_emotions(image):
     try:
-        if isinstance(image, tuple):
+        # 1) Bind the incoming value
+        image_input = image
+
+        # 2) If Streamlit returned a (bytes, mime) tuple, unwrap it
+        if isinstance(image_input, tuple):
             image_input = image_input[0]
 
+        # 3) Ensure we have a PIL.Image
         if not isinstance(image_input, Image.Image):
             image = Image.open(image_input)
         else:
             image = image_input
 
+        # 4) Force RGB and arrayify
         image = image.convert("RGB")
         img_array = np.asarray(image)
 
-        result = DeepFace.analyze(img_array, actions=["emotion"], detector_backend="retinaface", enforce_detection=False)
+        # 5) DeepFace analyze with RetinaFace detector
+        result = DeepFace.analyze(
+            img_array,
+            actions=["emotion"],
+            detector_backend="retinaface",
+            enforce_detection=False
+        )
+
+        # 6) Unpack result and format
         data = result[0] if isinstance(result, list) else result
-        emo = data.get("dominant_emotion", "Unknown").capitalize()
+        dominant = data.get("dominant_emotion", "Unknown").capitalize()
         conf = data["emotion"].get(data.get("dominant_emotion", ""), 0) / 100
 
-        return [{"emotion": emo, "confidence": conf}]
+        return [{"emotion": dominant, "confidence": conf}]
 
     except Exception as e:
         st.error(f"Emotion Detection Failed: {e}")
