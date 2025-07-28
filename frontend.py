@@ -137,23 +137,14 @@ if image_data:
         detected_emotion = emotions[0]["emotion"]
         st.session_state.last_emotion = detected_emotion  # store for regeneration
 
-    # Regenerate button logic
-    with st.form("regenerate_form", clear_on_submit=True):
-        col1, col2 = st.columns([9, 1])
-        with col1:
-            st.markdown("### 🎵 Your Mood-Based Playlist")
-        with col2:
-            regenerate_clicked = st.form_submit_button("🔄")
-
-    # Trigger playlist regeneration
-    if regenerate_clicked:
+    if st.button("🔁 Regenerate Playlist"):
         st.session_state.regenerate = True
 
     playlist = st.session_state.last_playlist
     keywords = emotion_to_genre.get(st.session_state.last_emotion, ["mood"])
     random.shuffle(keywords)
 
-    # Only fetch a new playlist if regenerate triggered or no existing playlist
+    # Only fetch a new playlist if we just detected an image or clicked regenerate
     if st.session_state.regenerate or playlist is None:
         playlist = None
         query_attempts = []
@@ -172,9 +163,11 @@ if image_data:
                 break
 
         st.session_state.last_playlist = playlist
-        st.session_state.regenerate = False
+        st.session_state.regenerate = False  # reset flag
 
-    # Show playlist
+    st.markdown("---")
+    st.subheader("🎵 Your Mood-Based Playlist")
+
     if playlist:
         playlist_name = playlist.get("name", "Unnamed Playlist")
         playlist_url = playlist["external_urls"]["spotify"]
@@ -183,7 +176,6 @@ if image_data:
         st.components.v1.iframe(src=playlist_embed_url, height=400)
     else:
         st.warning("No matching playlist found on Spotify.")
-
 
 
     # # 🎵 Spotify Playlist Section
