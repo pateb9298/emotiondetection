@@ -1,6 +1,5 @@
 # importing necessary libraries
 import streamlit as st
-# Pillow loads and processess images
 from PIL import Image
 import io
 from datetime import datetime
@@ -10,6 +9,7 @@ import os
 from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
 
+# Initialize Spotify API client
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
     client_id=os.getenv("SPOTIPY_CLIENT_ID"),
     client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
@@ -26,75 +26,44 @@ emotion_to_genre = {
     "Disgust": "punk"
 }
 
-# Spotify section to add after showing emotion result
-if emotions:
-    detected_emotion = emotions[0]["emotion"]
-    genre = emotion_to_genre.get(detected_emotion, "mood")
-
-    # Search Spotify for a playlist with that genre
-    results = sp.search(q=f"{genre} playlist", type="playlist", limit=1)
-    if results["playlists"]["items"]:
-        playlist = results["playlists"]["items"][0]
-        playlist_name = playlist["name"]
-        playlist_url = playlist["external_urls"]["spotify"]
-        playlist_embed = f"https://open.spotify.com/embed/playlist/{playlist['id']}"
-
-        st.markdown("---")
-        st.subheader(f"🎵 Spotify Playlist for Your Mood: {detected_emotion}")
-        st.markdown(f"**[{playlist_name}]({playlist_url})**")
-        st.components.v1.iframe(playlist_embed, height=400)
-    else:
-        st.warning("No playlist found for this emotion.")
-
-# # ---- Helper Functions ----
+# ---- Helper Functions ----
 def analyze_emotions(image):
     try:
-        # converts the PIL image into a numpy array
         img_array = np.array(image)
-
-        # runs deepface
         result = DeepFace.analyze(img_array, actions=["emotion"], enforce_detection=False)
 
-        if isinstance(result, list):
-            data = result[0]
-        else:
-            data = result
-
+        data = result[0] if isinstance(result, list) else result
         dominant_emotion = data.get("dominant_emotion", "Unknown")
         confidence = data["emotion"].get(dominant_emotion, 0)
 
         return [{
             "emotion": dominant_emotion.capitalize(),
-            "confidence": confidence/100
+            "confidence": confidence / 100
         }]
     
     except Exception as e:
         st.error(f"Emotion Detection Failed: {e}")
         return [{
             "emotion": "Unknown",
-            "confidence": "0"
+            "confidence": 0
         }]
-# ---- App Initialization ----
 
+# ---- App Initialization ----
 st.set_page_config(
     page_title="Emotion Detection Camera",
     page_icon="📸",
     layout="centered"
 )
 
-# Initialize session state for saved images
 if "gallery" not in st.session_state:
-    # st.session_state.gallery is like a memory for the app while it runs
     st.session_state.gallery = []
 
 # ---- Header ----
 st.markdown(
     """
     <div style='text-align: center;'>
-        <h1 style='font-size:2.5rem; margin-bottom:0.25rem;'>📸
-Emotion Detection</h1>
-        <p style='font-size:1.1rem; color: gray;'>Capture or upload a
-photo to analyze emotions</p>
+        <h1 style='font-size:2.5rem; margin-bottom:0.25rem;'>📸 Emotion Detection</h1>
+        <p style='font-size:1.1rem; color: gray;'>Capture or upload a photo to analyze emotions</p>
     </div>
     """,
     unsafe_allow_html=True
@@ -105,28 +74,21 @@ tab1, tab2 = st.tabs(["📷 Camera Capture", "📁 Upload Photo"])
 
 image_data = None
 with tab1:
-    # opens webcam and returns a photo as soon as its taken
     image_data = st.camera_input("Start your camera")
 
 with tab2:
-    # allows for the user to uploaf an image
-    uploaded = st.file_uploader("Upload an image", type=["png", "jpg",
-"jpeg", "gif"])
+    uploaded = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "gif"])
     if uploaded:
         image_data = uploaded
 
 # ---- Process Image ----
 if image_data:
-    # Display the chosen image
     image = Image.open(image_data)
-    # shows it on the page
     st.image(image, caption="Analyzed Image", use_column_width=True)
 
-    # Analyze emotion (demo)
     st.info("Analyzing emotions... 🤔")
     emotions = analyze_emotions(image)
 
-    # Display results
     st.markdown("---")
     st.subheader("🎭 Emotion Analysis Results")
     for result in emotions:
@@ -147,11 +109,11 @@ if image_data:
             f"border-radius: 1rem; background: rgba(102, 126, 234, 0.2);'>"
             f"<span style='font-size:2rem; margin-right:1rem;'>{emoji}</span>"
             f"<div><strong style='font-size:1.5rem;'>{emo}</strong><br/>"
-            f"<span style='font-size:1.2rem;'>{conf}%confidence</span></div></div>",
+            f"<span style='font-size:1.2rem;'>{conf}% confidence</span></div></div>",
             unsafe_allow_html=True
         )
 
-    # Save to gallery
+    # Save image to gallery
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     buf = io.BytesIO()
     image.save(buf, format="JPEG")
@@ -166,7 +128,6 @@ if image_data:
     detected_emotion = emotions[0]["emotion"]
     genre = emotion_to_genre.get(detected_emotion, "mood")
 
-    # Search Spotify for a relevant playlist
     results = sp.search(q=f"{genre} playlist", type="playlist", limit=1)
 
     st.markdown("---")
@@ -182,7 +143,6 @@ if image_data:
         st.components.v1.iframe(playlist_embed_url, height=400)
     else:
         st.warning("No matching playlist found on Spotify.")
-
 
 # ---- Gallery Section ----
 st.markdown("---")
