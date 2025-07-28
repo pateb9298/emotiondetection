@@ -6,6 +6,45 @@ import io
 from datetime import datetime
 from deepface import DeepFace
 import numpy as np
+import os
+from spotipy.oauth2 import SpotifyClientCredentials
+import spotipy
+
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
+    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
+    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
+))
+
+# Emotion to playlist genre map
+emotion_to_genre = {
+    "Happy": "pop",
+    "Sad": "acoustic",
+    "Angry": "metal",
+    "Surprised": "electronic",
+    "Neutral": "chill",
+    "Fear": "ambient",
+    "Disgust": "punk"
+}
+
+# Spotify section to add after showing emotion result
+if emotions:
+    detected_emotion = emotions[0]["emotion"]
+    genre = emotion_to_genre.get(detected_emotion, "mood")
+
+    # Search Spotify for a playlist with that genre
+    results = sp.search(q=f"{genre} playlist", type="playlist", limit=1)
+    if results["playlists"]["items"]:
+        playlist = results["playlists"]["items"][0]
+        playlist_name = playlist["name"]
+        playlist_url = playlist["external_urls"]["spotify"]
+        playlist_embed = f"https://open.spotify.com/embed/playlist/{playlist['id']}"
+
+        st.markdown("---")
+        st.subheader(f"🎵 Spotify Playlist for Your Mood: {detected_emotion}")
+        st.markdown(f"**[{playlist_name}]({playlist_url})**")
+        st.components.v1.iframe(playlist_embed, height=400)
+    else:
+        st.warning("No playlist found for this emotion.")
 
 # # ---- Helper Functions ----
 def analyze_emotions(image):
@@ -122,6 +161,28 @@ if image_data:
         'emoji': emoji,
         'timestamp': timestamp
     })
+
+    # 🎵 Spotify Playlist Section
+    detected_emotion = emotions[0]["emotion"]
+    genre = emotion_to_genre.get(detected_emotion, "mood")
+
+    # Search Spotify for a relevant playlist
+    results = sp.search(q=f"{genre} playlist", type="playlist", limit=1)
+
+    st.markdown("---")
+    st.subheader("🎵 Your Mood-Based Playlist")
+
+    if results["playlists"]["items"]:
+        playlist = results["playlists"]["items"][0]
+        playlist_name = playlist["name"]
+        playlist_url = playlist["external_urls"]["spotify"]
+        playlist_embed_url = f"https://open.spotify.com/embed/playlist/{playlist['id']}"
+
+        st.markdown(f"**[{playlist_name}]({playlist_url})**")
+        st.components.v1.iframe(playlist_embed_url, height=400)
+    else:
+        st.warning("No matching playlist found on Spotify.")
+
 
 # ---- Gallery Section ----
 st.markdown("---")
