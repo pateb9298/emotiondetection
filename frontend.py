@@ -8,6 +8,7 @@ import numpy as np
 import os
 from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
+import random
 
 # Initialize Spotify API client
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
@@ -16,15 +17,26 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 ))
 
 # Emotion to playlist genre map
+
 emotion_to_genre = {
-    "Happy": "pop",
-    "Sad": "breakup",
-    "Angry": "metal",
-    "Surprised": "electronic",
-    "Neutral": "chill",
-    "Fear": "ambient",
-    "Disgust": "punk"
+    "Happy": ["happy", "pop", "feel good"],
+    "Sad": ["sad", "breakup", "chill"],
+    "Angry": ["angry", "metal", "hard rock"],
+    "Surprised": ["surprise", "electronic", "dance"],
+    "Neutral": ["neutral", "lofi", "chill"],
+    "Fear": ["ambient", "calm", "soothing"],
+    "Disgust": ["punk", "grunge", "alternative"]
 }
+
+# emotion_to_genre = {
+#     "Happy": "pop",
+#     "Sad": "acoustic",
+#     "Angry": "metal",
+#     "Surprised": "electronic",
+#     "Neutral": "chill",
+#     "Fear": "ambient",
+#     "Disgust": "punk"
+# }
 
 # ---- Helper Functions ----
 def analyze_emotions(image):
@@ -126,15 +138,23 @@ if image_data:
 
     # 🎵 Spotify Playlist Section
     detected_emotion = emotions[0]["emotion"]
-    genre = emotion_to_genre.get(detected_emotion, "mood")
+    # genre = emotion_to_genre.get(detected_emotion, "mood")
+    # results = sp.search(q=f"{genre} playlist", type="playlist", limit=1)
 
-    results = sp.search(q=f"{genre} playlist", type="playlist", limit=1)
+    keywords = emotion_to_genre.get(detected_emotion, ["mood"])
+    # Shuffle and join two keywords randomly for better search results
+    random.shuffle(keywords)
+    query = " ".join(keywords[:2]) + " playlist"  # Use top 2 random keywords
+
+    # Search Spotify with more expressive query and multiple results
+    results = sp.search(q=query, type="playlist", limit=5)
 
     st.markdown("---")
     st.subheader("🎵 Your Mood-Based Playlist")
 
     if results["playlists"]["items"]:
-        playlist = results["playlists"]["items"][0]
+        # playlist = results["playlists"]["items"][0]
+        playlist = random.choice(results["playlists"]["items"])
         playlist_name = playlist["name"]
         playlist_url = playlist["external_urls"]["spotify"]
         playlist_embed_url = f"https://open.spotify.com/embed/playlist/{playlist['id']}"
