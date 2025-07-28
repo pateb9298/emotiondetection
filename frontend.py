@@ -28,43 +28,31 @@ emotion_to_genre = {
 }
 
 # ---- Helper Function ----
-def analyze_emotions(img_input):
+def analyze_emotions(image):
     try:
-        # 1) Unwrap a (bytes, mime) tuple if Streamlit gave us one
-        if isinstance(img_input, tuple):
-            img_input = img_input[0]
+        img_array = np.array(image)
+        result = DeepFace.analyze(img_array, actions=["emotion"], enforce_detection=False)
+        data = result[0] if isinstance(result, list) else result
+        dominant_emotion = data.get("dominant_emotion", "Unknown")
+        confidence = data["emotion"].get(dominant_emotion, 0)
 
-        # 2) If it's raw bytes, wrap in BytesIO
-        if isinstance(img_input, (bytes, bytearray)):
-            img_input = io.BytesIO(img_input)
-
-        # 3) Ensure we have a PIL.Image
-        if not isinstance(img_input, Image.Image):
-            image = Image.open(img_input)
-        else:
-            image = img_input
-
-        # 4) Force RGB & convert to numpy
-        image = image.convert("RGB")
-        img_array = np.asarray(image)
-
-        # 5) Analyze with DeepFace + RetinaFace
-        result = DeepFace.analyze(
-            img_array,
-            actions=["emotion"],
-            detector_backend="retinaface",
-            enforce_detection=False
-        )
-
-        # 6) Unpack and return
-        out = result[0] if isinstance(result, list) else result
-        emo = out.get("dominant_emotion", "Unknown").capitalize()
-        conf = out["emotion"].get(out.get("dominant_emotion", ""), 0) / 100
-        return [{"emotion": emo, "confidence": conf}]
-
+        return [{
+            "emotion": dominant_emotion.capitalize(),
+            "confidence": confidence / 100
+        }]
     except Exception as e:
         st.error(f"Emotion Detection Failed: {e}")
-        return [{"emotion": "Unknown", "confidence": 0}]
+        return [{
+            "emotion": "Unknown",
+            "confidence": 0
+        }]
+
+# ---- App Initialization ----
+st.set_page_config(
+    page_title="Emotion Detection Camera",
+    page_icon="📸",
+    layout="centered"
+)
 
 if "gallery" not in st.session_state:
     st.session_state.gallery = []
