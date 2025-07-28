@@ -30,7 +30,9 @@ emotion_to_genre = {
 # ---- Helper Function ----
 def analyze_emotions(image):
     try:
-        img_array = np.array(image)
+        if isinstance(image, tuple):
+            image = image[0]
+        img_array = np.asarray(image.convert("RGB"))
         result = DeepFace.analyze(img_array, actions=["emotion"], detector_backend="retinaface", enforce_detection=False)
         data = result[0] if isinstance(result, list) else result
         dominant_emotion = data.get("dominant_emotion", "Unknown")
