@@ -27,6 +27,15 @@ emotion_to_genre = {
     "Disgust": ["punk", "garage rock", "grunge", "heavy", "alt rock"]
 }
 
+if "regenerate" not in st.session_state:
+    st.session_state.regenerate = False
+
+if "last_emotion" not in st.session_state:
+    st.session_state.last_emotion = None
+
+if "last_playlist" not in st.session_state:
+    st.session_state.last_playlist = None
+
 # ---- Helper Function ----
 def analyze_emotions(image):
     try:
@@ -124,24 +133,37 @@ if image_data:
     })
 
     # 🎵 Spotify Playlist Section
-    detected_emotion = emotions[0]["emotion"]
-    keywords = emotion_to_genre.get(detected_emotion, ["mood"])
+    if emotions:
+        detected_emotion = emotions[0]["emotion"]
+        st.session_state.last_emotion = detected_emotion  # store for regeneration
+
+    if st.button("🔁 Regenerate Playlist"):
+        st.session_state.regenerate = True
+
+    playlist = st.session_state.last_playlist
+    keywords = emotion_to_genre.get(st.session_state.last_emotion, ["mood"])
     random.shuffle(keywords)
 
-    playlist = None
-    query_attempts = []
+    # Only fetch a new playlist if we just detected an image or clicked regenerate
+    if st.session_state.regenerate or playlist is None:
+        playlist = None
+        query_attempts = []
 
-    for i in range(len(keywords)):
-        for j in range(i + 1, len(keywords)):
-            query = f"{keywords[i]} {keywords[j]} playlist"
-            query_attempts.append(query)
-            results = sp.search(q=query, type="playlist", limit=5)
-            items = results.get("playlists", {}).get("items", [])
-            if items:
-                playlist = random.choice(items)
+        for i in range(len(keywords)):
+            for j in range(i + 1, len(keywords)):
+                query = f"{keywords[i]} {keywords[j]} playlist"
+                query_attempts.append(query)
+                results = sp.search(q=query, type="playlist", limit=5)
+                items = results.get("playlists", {}).get("items", [])
+                valid_items = [p for p in items if p is not None]
+                if valid_items:
+                    playlist = random.choice(valid_items)
+                    break
+            if playlist:
                 break
-        if playlist:
-            break
+
+        st.session_state.last_playlist = playlist
+        st.session_state.regenerate = False  # reset flag
 
     st.markdown("---")
     st.subheader("🎵 Your Mood-Based Playlist")
@@ -153,7 +175,40 @@ if image_data:
         st.markdown(f"**[{playlist_name}]({playlist_url})**")
         st.components.v1.iframe(src=playlist_embed_url, height=400)
     else:
-        st.warning(f"No matching playlist found on Spotify.\n\nTried: `{', '.join(query_attempts)}`")
+        st.warning("No matching playlist found on Spotify.")
+
+
+    # # 🎵 Spotify Playlist Section
+    # detected_emotion = emotions[0]["emotion"]
+    # keywords = emotion_to_genre.get(detected_emotion, ["mood"])
+    # random.shuffle(keywords)
+
+    # playlist = None
+    # query_attempts = []
+
+    # for i in range(len(keywords)):
+    #     for j in range(i + 1, len(keywords)):
+    #         query = f"{keywords[i]} {keywords[j]} playlist"
+    #         query_attempts.append(query)
+    #         results = sp.search(q=query, type="playlist", limit=5)
+    #         items = results.get("playlists", {}).get("items", [])
+    #         if items:
+    #             playlist = random.choice(items)
+    #             break
+    #     if playlist:
+    #         break
+
+    # st.markdown("---")
+    # st.subheader("🎵 Your Mood-Based Playlist")
+
+    # if playlist:
+    #     playlist_name = playlist.get("name", "Unnamed Playlist")
+    #     playlist_url = playlist["external_urls"]["spotify"]
+    #     playlist_embed_url = f"https://open.spotify.com/embed/playlist/{playlist['id']}"
+    #     st.markdown(f"**[{playlist_name}]({playlist_url})**")
+    #     st.components.v1.iframe(src=playlist_embed_url, height=400)
+    # else:
+    #     st.warning(f"No matching playlist found on Spotify.\n\nTried: `{', '.join(query_attempts)}`")
 
 # ---- Gallery Section ----
 st.markdown("---")
