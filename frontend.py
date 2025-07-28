@@ -76,10 +76,10 @@ st.markdown(
     """
     <div style='text-align: center;'>
         <img src = "C:\Users\patel\emotiondetection-1\moodifyLogo.png"></img>
-        <h1 style='font-size:2.5rem; margin-bottom:0.25rem;'>📸 Moodify</h1>
+        <h1 style='font-size:2.5rem; margin-bottom:0.25rem;'>Moodify</h1>
         <p style='font-size:1.1rem; color: gray;'>Capture or upload a photo to analyze emotions</p>
     </div>
-    """,
+    """
     unsafe_allow_html=True
 )
 
@@ -97,7 +97,7 @@ with tab2:
 
 # ---- Process Image ----
 if image_data:
-    image = Image.open(image_data) (
+    image = Image.open(image_data)
     st.image(image, caption="Analyzed Image", use_column_width=True)
 
     st.info("Analyzing emotions... 🤔")
