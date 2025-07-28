@@ -21,7 +21,7 @@ emotion_to_genre = {
     "Happy": ["happy", "pop", "feel good", "upbeat", "party"],
     "Sad": ["sad songs", "acoustic", "emotional", "heartbreak", "soft rock"],
     "Angry": ["metal", "hard rock", "punk", "grunge", "alternative"],
-    "Surprised": ["electronic", "dance", "edm", "house", "party"],
+    "Surprise": ["electronic", "dance", "edm", "house", "party"],
     "Neutral": ["lofi", "chill", "study", "relax", "ambient"],
     "Fear": ["ambient", "calm", "meditation", "relax", "instrumental"],
     "Disgust": ["punk", "garage rock", "grunge", "heavy", "alt rock"]
@@ -97,7 +97,7 @@ if image_data:
             'Happy': '😊',
             'Sad': '😢',
             'Angry': '😠',
-            'Surprised': '😲',
+            'Surprise': '😲',
             'Neutral': '😐',
             'Fear': '😨',
             'Disgust': '🤢'
