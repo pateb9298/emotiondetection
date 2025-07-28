@@ -20,7 +20,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 
 emotion_to_genre = {
     "Happy": ["happy", "pop", "feel good", "upbeat", "party"],
-    "Sad": ["sad", "acoustic", "chill", "sad songs", "melancholy"],
+    "Sad": ["Sad Songs"],
     "Angry": ["metal", "hard rock", "punk", "rock", "alternative"],
     "Surprised": ["electronic", "dance", "edm", "house", "party"],
     "Neutral": ["lofi", "chill", "study", "relax", "ambient"],
