@@ -47,6 +47,18 @@ def analyze_emotions(image):
             "emotion": "Unknown",
             "confidence": 0
         }]
+    
+def get_playlist(emotion):
+    keywords = emotion_to_genre.get(emotion, ["mood"])
+    random.shuffle(keywords)
+    for i in range(len(keywords)):
+        for j in range(i + 1, len(keywords)):
+            query = f"{keywords[i]} {keywords[j]} playlist"
+            results = sp.search(q=query, type="playlist", limit=5)
+            items = results.get("playlists", {}).get("items", [])
+            if items:
+                return random.choice(items)
+    return None
 
 # ---- App Initialization ----
 st.set_page_config(
@@ -124,28 +136,18 @@ if image_data:
         'timestamp': timestamp
     })
 
-    # 🎵 Spotify Playlist Section
-    detected_emotion = emotions[0]["emotion"]
-    keywords = emotion_to_genre.get(detected_emotion, ["mood"])
-    random.shuffle(keywords)
-
-    playlist = None
-    query_attempts = []
-
-    for i in range(len(keywords)):
-        for j in range(i + 1, len(keywords)):
-            query = f"{keywords[i]} {keywords[j]} playlist"
-            query_attempts.append(query)
-            results = sp.search(q=query, type="playlist", limit=5)
-            items = results.get("playlists", {}).get("items", [])
-            if items:
-                playlist = random.choice(items)
-                break
-        if playlist:
-            break
-
     st.markdown("---")
     st.subheader("🎵 Your Mood-Based Playlist")
+
+    detected_emotion = emotions[0]["emotion"]
+
+    if "playlist" not in st.session_state:
+        st.session_state.playlist = get_playlist(detected_emotion)
+
+    if st.button("🔁 Regenerate Playlist"):
+        st.session_state.playlist = get_playlist(detected_emotion)
+
+    playlist = st.session_state.playlist
 
     if playlist:
         playlist_name = playlist.get("name", "Unnamed Playlist")
@@ -154,7 +156,7 @@ if image_data:
         st.markdown(f"**[{playlist_name}]({playlist_url})**")
         st.components.v1.iframe(src=playlist_embed_url, height=400)
     else:
-        st.warning(f"No matching playlist found on Spotify.\n\nTried: `{', '.join(query_attempts)}`")
+        st.warning("No matching playlist found.")
 
 # ---- Gallery Section ----
 st.markdown("---")
