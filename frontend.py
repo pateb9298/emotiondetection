@@ -18,7 +18,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 # Emotion to playlist genre map
 emotion_to_genre = {
     "Happy": "pop",
-    "Sad": "acoustic",
+    "Sad": "breakup",
     "Angry": "metal",
     "Surprised": "electronic",
     "Neutral": "chill",
