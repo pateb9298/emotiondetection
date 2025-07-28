@@ -28,27 +28,27 @@ emotion_to_genre = {
 }
 
 # ---- Helper Function ----
-# ---- Helper Function ----
-def analyze_emotions(image):
+def analyze_emotions(img_input):
     try:
-        # 1) Bind the incoming value
-        image_input = image
+        # 1) Unwrap a (bytes, mime) tuple if Streamlit gave us one
+        if isinstance(img_input, tuple):
+            img_input = img_input[0]
 
-        # 2) If Streamlit returned a (bytes, mime) tuple, unwrap it
-        if isinstance(image_input, tuple):
-            image_input = image_input[0]
+        # 2) If it's raw bytes, wrap in BytesIO
+        if isinstance(img_input, (bytes, bytearray)):
+            img_input = io.BytesIO(img_input)
 
         # 3) Ensure we have a PIL.Image
-        if not isinstance(image_input, Image.Image):
-            image = Image.open(image_input)
+        if not isinstance(img_input, Image.Image):
+            image = Image.open(img_input)
         else:
-            image = image_input
+            image = img_input
 
-        # 4) Force RGB and arrayify
+        # 4) Force RGB & convert to numpy
         image = image.convert("RGB")
         img_array = np.asarray(image)
 
-        # 5) DeepFace analyze with RetinaFace detector
+        # 5) Analyze with DeepFace + RetinaFace
         result = DeepFace.analyze(
             img_array,
             actions=["emotion"],
@@ -56,23 +56,15 @@ def analyze_emotions(image):
             enforce_detection=False
         )
 
-        # 6) Unpack result and format
-        data = result[0] if isinstance(result, list) else result
-        dominant = data.get("dominant_emotion", "Unknown").capitalize()
-        conf = data["emotion"].get(data.get("dominant_emotion", ""), 0) / 100
-
-        return [{"emotion": dominant, "confidence": conf}]
+        # 6) Unpack and return
+        out = result[0] if isinstance(result, list) else result
+        emo = out.get("dominant_emotion", "Unknown").capitalize()
+        conf = out["emotion"].get(out.get("dominant_emotion", ""), 0) / 100
+        return [{"emotion": emo, "confidence": conf}]
 
     except Exception as e:
         st.error(f"Emotion Detection Failed: {e}")
         return [{"emotion": "Unknown", "confidence": 0}]
-
-# ---- App Initialization ----
-st.set_page_config(
-    page_title="Emotion Detection Camera",
-    page_icon="📸",
-    layout="centered"
-)
 
 if "gallery" not in st.session_state:
     st.session_state.gallery = []
